@@ -11,7 +11,19 @@ Todo el software necesario (FSL, MRtrix3, DSI Studio, Python) está incluido en 
 ## Requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) instalado
-- (Opcional) GPU NVIDIA con [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) para acelerar la corrección de Eddy
+- (Opcional, pero **muy recomendado**) GPU NVIDIA con [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+
+> **¿Por qué GPU?** El paso de corrección de distorsiones y movimiento (`eddy`) es el más lento del pipeline. Con GPU (`eddy_cuda`) este paso puede completarse en **5–10 minutos**; sin GPU (`eddy_cpu`) puede tomar entre **30 y 90 minutos** por sujeto. Si tu equipo tiene una tarjeta NVIDIA, se recomienda instalar CUDA y el nvidia-container-toolkit antes de usar el pipeline.
+>
+> Instalación rápida del nvidia-container-toolkit en Ubuntu:
+> ```bash
+> curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+> curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+>     sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+>     sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+> sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+> sudo systemctl restart docker
+> ```
 
 ---
 
@@ -155,22 +167,35 @@ Tractography/
 ├── T1w_in_DWI.nii.gz                   # T1w en espacio DWI
 ├── T1w_in_MNI.nii.gz                   # T1w en espacio MNI
 ├── diffusion_metrics/
-│   ├── FA.nii.gz                       # Anisotropía Fraccional (GQI)
-│   ├── FA_dti.nii.gz                   # Anisotropía Fraccional (DTI tensor)
-│   ├── QA.nii.gz                       # Quantitative Anisotropy
-│   ├── QIR.nii.gz                      # Quantitative Isotropic Ratio
-│   ├── RD.nii.gz                       # Difusividad Radial (GQI)
-│   ├── RD_dti.nii.gz                   # Difusividad Radial (DTI tensor)
-│   ├── AD.nii.gz                       # Difusividad Axial (DTI tensor)
-│   ├── MD.nii.gz                       # Difusividad Media (DTI tensor)
-│   ├── ISO.nii.gz                      # Componente Isotrópica
-│   └── RDI.nii.gz                      # Restricted Diffusion Imaging
+│   ├── FA.nii.gz                       # Anisotropía Fraccional — derivada de la reconstrucción GQI (DSI Studio)
+│   ├── FA_dti.nii.gz                   # Anisotropía Fraccional — ajuste del tensor DTI clásico (MRtrix3)
+│   ├── QA.nii.gz                       # Quantitative Anisotropy (GQI, DSI Studio)
+│   ├── QIR.nii.gz                      # Quantitative Isotropic Ratio (GQI, DSI Studio)
+│   ├── RD.nii.gz                       # Difusividad Radial — derivada de GQI (DSI Studio)
+│   ├── RD_dti.nii.gz                   # Difusividad Radial — tensor DTI clásico (MRtrix3)
+│   ├── AD.nii.gz                       # Difusividad Axial — tensor DTI clásico (MRtrix3)
+│   ├── MD.nii.gz                       # Difusividad Media — tensor DTI clásico (MRtrix3)
+│   ├── ISO.nii.gz                      # Componente Isotrópica (GQI, DSI Studio)
+│   └── RDI.nii.gz                      # Restricted Diffusion Imaging (GQI, DSI Studio)
 └── bundles/
     ├── results_folder_DWM_DWI_space/   # Fascículos DWM en espacio DWI (.tck)
     ├── results_folder_SWM_DWI_space/   # Fascículos SWM en espacio DWI (.tck)
     ├── bundle_metrics_DWM.csv          # Métricas por fascículo DWM
     └── bundle_metrics_SWM.csv          # Métricas por fascículo SWM
 ```
+
+> **¿Por qué hay dos FA y dos RD?**
+> DSI Studio genera métricas a partir de una reconstrucción GQI (*Generalized Q-sampling Imaging*), un modelo más avanzado que el tensor DTI clásico. Sin embargo, DSI Studio **no exporta AD ni MD** ya que su reconstrucción no calcula los eigenvalores del tensor completo.
+> Para obtener AD y MD se utilizó MRtrix3 (`dwi2tensor` + `tensor2metric`), que ajusta el tensor DTI estándar directamente sobre el DWI preprocesado. Este proceso también produce sus propias versiones de FA y RD (`FA_dti`, `RD_dti`), que pueden diferir ligeramente de las de DSI Studio.
+>
+> | Archivo | Origen | Cuándo usarlo |
+> |---|---|---|
+> | `FA.nii.gz` | DSI Studio (GQI) | Análisis basados en GQI; consistente con QA y QIR |
+> | `FA_dti.nii.gz` | MRtrix3 (tensor DTI) | Comparación con estudios DTI clásicos |
+> | `RD.nii.gz` | DSI Studio (GQI) | Análisis basados en GQI |
+> | `RD_dti.nii.gz` | MRtrix3 (tensor DTI) | Usar junto con AD y MD para análisis DTI completo |
+> | `AD.nii.gz` | MRtrix3 (tensor DTI) | Difusividad axial (λ₁) |
+> | `MD.nii.gz` | MRtrix3 (tensor DTI) | Difusividad media ((λ₁+λ₂+λ₃)/3) |
 
 ### Columnas de los CSV de métricas
 
@@ -236,7 +261,7 @@ for sub_dir in "${SUBJECTS_DIR}"/sub-*/ses-*/; do
 done
 ```
 
-> Los sujetos se procesan **de forma secuencial**. Si el servidor tiene múltiples GPUs o suficiente RAM, es posible paralelizar lanzando varios contenedores simultáneamente, aunque esto aumenta el consumo de recursos considerablemente.
+> Los sujetos se procesan **de forma secuencial**.
 
 ---
 
