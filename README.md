@@ -32,7 +32,7 @@ docker load -i dwi_pipeline.tar.gz
 El pipeline espera que los datos DWI estén organizados en formato BIDS. La imagen T1w puede estar en cualquier ubicación:
 
 ```
-/ruta/a/mis/datos/
+/ruta/a/mi/carpeta/de/sujetos/
 └── sub-XX/
     └── ses-Y/
         └── dwi/
@@ -56,7 +56,7 @@ El pipeline espera que los datos DWI estén organizados en formato BIDS. La imag
 
 ```bash
 docker run --rm \
-    -v /ruta/a/mis/datos:/data \
+    -v /ruta/a/mi/carpeta/de/sujetos:/data \
     dwi_pipeline \
     -s sub-13/ses-1 \
     --dwi_pa sub-13_ses-1_dir-PA_dwi \
@@ -68,7 +68,7 @@ docker run --rm \
 
 ```bash
 docker run --rm --gpus all \
-    -v /ruta/a/mis/datos:/data \
+    -v /ruta/a/mi/carpeta/de/sujetos:/data \
     dwi_pipeline \
     -s sub-13/ses-1 \
     --dwi_pa sub-13_ses-1_dir-PA_dwi \
@@ -80,7 +80,7 @@ docker run --rm --gpus all \
 
 ```bash
 docker run --rm --gpus all \
-    -v /ruta/a/mis/datos:/data \
+    -v /ruta/a/mi/carpeta/de/sujetos:/data \
     -v /ruta/a/freesurfer:/freesurfer \
     dwi_pipeline \
     -s sub-13/ses-1 \
@@ -110,7 +110,7 @@ docker run --rm --gpus all \
 
 ## Salidas
 
-Los resultados se guardan en `/ruta/a/mis/datos/sub-XX/ses-Y/Tractography/`:
+Los resultados se guardan en `/ruta/a/mi/carpeta/de/sujetos/sub-XX/ses-Y/Tractography/`:
 
 ```
 Tractography/
@@ -168,6 +168,42 @@ docker run --rm --gpus all \
     --tract_count 5000000 \
     --cleanup
 ```
+
+### Procesamiento de todos los sujetos en lote
+
+El siguiente script itera sobre todos los sujetos y sesiones encontrados en la carpeta de sujetos y lanza el pipeline para cada uno:
+
+```bash
+#!/bin/bash
+SUBJECTS_DIR=/ruta/a/mi/carpeta/de/sujetos
+FREESURFER_DIR=/ruta/a/freesurfer   # opcional, ajustar según corresponda
+DWI_PA_SUFFIX=dir-PA_dwi            # sufijo del archivo PA (sin sub-XX_ses-Y_)
+DWI_AP_SUFFIX=dir-AP_dwi            # sufijo del archivo AP (sin sub-XX_ses-Y_)
+
+for sub_dir in "${SUBJECTS_DIR}"/sub-*/ses-*/; do
+    # Extraer sub-XX/ses-Y desde la ruta completa
+    SUBJECT=$(echo "${sub_dir}" | grep -oP 'sub-[^/]+/ses-[^/]+')
+    SUB=$(echo "${SUBJECT}" | cut -d'/' -f1)   # sub-XX
+    SES=$(echo "${SUBJECT}" | cut -d'/' -f2)   # ses-Y
+    PREFIX="${SUB}_${SES}"
+
+    echo "=============================="
+    echo "Procesando: ${SUBJECT}"
+    echo "=============================="
+
+    docker run --rm --gpus all \
+        -v "${SUBJECTS_DIR}:/data" \
+        -v "${FREESURFER_DIR}:/freesurfer" \
+        dwi_pipeline \
+        -s "${SUBJECT}" \
+        --dwi_pa "${PREFIX}_${DWI_PA_SUFFIX}" \
+        --dwi_ap "${PREFIX}_${DWI_AP_SUFFIX}" \
+        --t1w "/freesurfer/${SUB}/mri/T1w_brain.nii.gz" \
+        --cleanup
+done
+```
+
+> Los sujetos se procesan **de forma secuencial**. Si el servidor tiene múltiples GPUs o suficiente RAM, es posible paralelizar lanzando varios contenedores simultáneamente, aunque esto aumenta el consumo de recursos considerablemente.
 
 ---
 
