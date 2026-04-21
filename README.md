@@ -156,21 +156,24 @@ Tractography/
 ├── T1w_in_DWI.nii.gz                   # T1w en espacio DWI
 ├── T1w_in_MNI.nii.gz                   # T1w en espacio MNI
 ├── diffusion_metrics/
-│   ├── FA.nii.gz                       # Anisotropía Fraccional — derivada de la reconstrucción GQI (DSI Studio)
-│   ├── FA_dti.nii.gz                   # Anisotropía Fraccional — ajuste del tensor DTI clásico (MRtrix3)
+│   ├── FA.nii.gz                       # Anisotropía Fraccional — GQI (DSI Studio)
+│   ├── FA_dti.nii.gz                   # Anisotropía Fraccional — tensor DTI (MRtrix3)
 │   ├── QA.nii.gz                       # Quantitative Anisotropy (GQI, DSI Studio)
 │   ├── QIR.nii.gz                      # Quantitative Isotropic Ratio (GQI, DSI Studio)
-│   ├── RD.nii.gz                       # Difusividad Radial — derivada de GQI (DSI Studio)
-│   ├── RD_dti.nii.gz                   # Difusividad Radial — tensor DTI clásico (MRtrix3)
-│   ├── AD.nii.gz                       # Difusividad Axial — tensor DTI clásico (MRtrix3)
-│   ├── MD.nii.gz                       # Difusividad Media — tensor DTI clásico (MRtrix3)
+│   ├── RD.nii.gz                       # Difusividad Radial — GQI (DSI Studio)
+│   ├── RD_dti.nii.gz                   # Difusividad Radial — tensor DTI (MRtrix3)
+│   ├── AD.nii.gz                       # Difusividad Axial — tensor DTI (MRtrix3)
+│   ├── MD.nii.gz                       # Difusividad Media — tensor DTI (MRtrix3)
 │   ├── ISO.nii.gz                      # Componente Isotrópica (GQI, DSI Studio)
 │   └── RDI.nii.gz                      # Restricted Diffusion Imaging (GQI, DSI Studio)
-└── bundles/
-    ├── results_folder_DWM_DWI_space/   # Fascículos DWM en espacio DWI (.tck)
-    ├── results_folder_SWM_DWI_space/   # Fascículos SWM en espacio DWI (.tck)
+├── bundles/
+│   ├── results_folder_DWM_DWI_space/   # Fascículos DWM en espacio DWI (.tck)
+│   └── results_folder_SWM_e_DWI_space/ # Fascículos SWM estables en espacio DWI (.tck)
+└── outputs/                            ← carpeta de resultados principales
     ├── bundle_metrics_DWM.csv          # Métricas por fascículo DWM
-    └── bundle_metrics_SWM.csv          # Métricas por fascículo SWM
+    ├── bundle_metrics_SWM_e.csv        # Métricas por fascículo SWM
+    ├── connectivity.tt.gz.HCP-MMP.connectivity.mat     # Matriz de conectividad 360×360 (formato MATLAB)
+    └── connectivity.tt.gz.HCP-MMP.network_measures.txt # Métricas de red por región (texto plano)
 ```
 
 > **¿Por qué hay dos FA y dos RD?**
@@ -185,6 +188,14 @@ Tractography/
 > | `RD_dti.nii.gz` | MRtrix3 (tensor DTI) | Usar junto con AD y MD para análisis DTI completo |
 > | `AD.nii.gz` | MRtrix3 (tensor DTI) | Difusividad axial (λ₁) |
 > | `MD.nii.gz` | MRtrix3 (tensor DTI) | Difusividad media ((λ₁+λ₂+λ₃)/3) |
+
+> **Archivos de conectividad global (HCP-MMP atlas)**
+> La conectividad estructural se calcula sobre la tractografía de cerebro completo usando el atlas HCP-MMP (360 regiones). DSI Studio genera dos archivos:
+>
+> | Archivo | Descripción |
+> |---|---|
+> | `connectivity.tt.gz.HCP-MMP.connectivity.mat` | Matriz 360×360 con el número de streamlines entre cada par de regiones. Formato MATLAB, legible en Python con `scipy.io.loadmat()` |
+> | `connectivity.tt.gz.HCP-MMP.network_measures.txt` | Métricas de teoría de grafos por región: grado nodal, coeficiente de clustering, eficiencia local, longitud de camino, etc. Formato texto plano, abrir directamente en Excel o cualquier editor |
 
 ### Columnas de los CSV de métricas
 
