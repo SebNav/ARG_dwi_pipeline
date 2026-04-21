@@ -13,23 +13,23 @@ Todo el software necesario (FSL, MRtrix3, DSI Studio, Python) está incluido en 
 - [Docker](https://docs.docker.com/get-docker/) instalado
 - (Opcional) GPU NVIDIA con [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) para acelerar la corrección de Eddy
 
-
+---
 
 ## Carga de la Imagen
 
-Descarga la imagen docker presente en el siguiente drive. Desde el directorio donde se encuentra la imagen descargada `dwi_pipeline.tar.gz`:
+Descarga la imagen Docker desde el drive compartido. Desde el directorio donde se encuentra el archivo descargado `dwi_pipeline.tar.gz`:
 
 ```bash
 docker load -i dwi_pipeline.tar.gz
 ```
 
-> La imagen incluye FSL (~5 GB), MRtrix3 y DSI Studio. La lectura puede tardar unos minutos.
+> La imagen incluye FSL (~5 GB), MRtrix3 y DSI Studio. La carga puede tardar unos minutos.
 
 ---
 
 ## Estructura de Datos de Entrada
 
-El pipeline espera que los datos estén organizados en formato BIDS. La imagen T1w puede estar en cualquier ubicación (se monta como volumen adicional):
+El pipeline espera que los datos DWI estén organizados en formato BIDS. La imagen T1w puede estar en cualquier ubicación:
 
 ```
 /ruta/a/mis/datos/
@@ -46,7 +46,7 @@ El pipeline espera que los datos estén organizados en formato BIDS. La imagen T
             └── <nombre_AP>.json
 ```
 
-> La imagen T1w que se proporcionada deber ser la imagen preprocesada con el craneo removido para un registor entre imagenes. Puede provenir de cualquier fuente: carpeta `anat/`, FreeSurfer, etc.
+> La imagen T1w debe ser la imagen preprocesada para un mejor registro al espacio de difusion. Puede provenir de cualquier fuente: carpeta `anat/`, FreeSurfer, etc.
 
 ---
 
@@ -56,9 +56,6 @@ El pipeline espera que los datos estén organizados en formato BIDS. La imagen T
 
 ```bash
 docker run --rm \
-    -e OMP_NUM_THREADS=$(nproc) \
-    -u $(id -u):$(id -g) \
-    -w /tmp \
     -v /ruta/a/mis/datos:/data \
     dwi_pipeline \
     -s sub-13/ses-1 \
@@ -71,9 +68,6 @@ docker run --rm \
 
 ```bash
 docker run --rm --gpus all \
-    -e OMP_NUM_THREADS=$(nproc) \
-    -u $(id -u):$(id -g) \
-    -w /tmp \
     -v /ruta/a/mis/datos:/data \
     dwi_pipeline \
     -s sub-13/ses-1 \
@@ -86,9 +80,6 @@ docker run --rm --gpus all \
 
 ```bash
 docker run --rm --gpus all \
-    -e OMP_NUM_THREADS=$(nproc) \
-    -u $(id -u):$(id -g) \
-    -w /tmp \
     -v /ruta/a/mis/datos:/data \
     -v /ruta/a/freesurfer:/freesurfer \
     dwi_pipeline \
@@ -113,20 +104,7 @@ docker run --rm --gpus all \
 | `--tract_count` | No | Número de streamlines para la tractografía (por defecto: `2000000`) |
 | `--cleanup` | No | Elimina archivos intermedios al finalizar, conservando solo los resultados finales |
 
-> **Nota sobre `-w`, `--working_dir`:** el directorio raíz es `/data` y está configurado automáticamente por el contenedor — no es necesario especificarlo.
-
----
-
-## Opciones de Docker relevantes
-
-| Opción | Descripción |
-|---|---|
-| `--gpus all` | Habilita la GPU para `eddy_cuda` (5–10× más rápido que CPU) |
-| `-e OMP_NUM_THREADS=$(nproc)` | Usa todos los núcleos disponibles para `eddy_cpu` |
-| `-u $(id -u):$(id -g)` | Los archivos de salida tendrán tu usuario como propietario (sin ícono de candado) |
-| `-w /tmp` | MRtrix3 escribe archivos temporales aquí (necesario al usar `-u`) |
-| `-v /mis/datos:/data` | Monta tu directorio de datos dentro del contenedor |
-| `--rm` | Elimina el contenedor automáticamente al terminar |
+> **Nota:** el directorio raíz `/data` está configurado automáticamente — no es necesario pasar `-w`.
 
 ---
 
@@ -180,9 +158,6 @@ Tractography/
 
 ```bash
 docker run --rm --gpus all \
-    -e OMP_NUM_THREADS=$(nproc) \
-    -u $(id -u):$(id -g) \
-    -w /tmp \
     -v /media/data/Subjects:/data \
     -v /media/data/freesurfer:/freesurfer \
     dwi_pipeline \
@@ -200,12 +175,12 @@ docker run --rm --gpus all \
 
 | Problema | Causa | Solución |
 |---|---|---|
-| Archivos con ícono de candado | Container ejecutado como root | Usar `-u $(id -u):$(id -g)` y sin `sudo` |
-| `eddy_cuda` falla → usa CPU | Sin GPU o sin `--gpus all` | Agregar `--gpus all` si hay GPU NVIDIA |
-| `dsi_studio: command not found` | PATH incorrecto en la imagen | Reconstruir la imagen con `docker build` |
+| Archivos con ícono de candado | Docker configurado para correr como root en ese sistema | Agregar `-u $(id -u):$(id -g) -w /tmp` al comando |
+| `eddy_cuda` falla → usa CPU | Sin GPU o sin `--gpus all` | Agregar `--gpus all` si hay GPU NVIDIA disponible |
+| `dsi_studio: command not found` | PATH incorrecto en la imagen | Recargar la imagen con `docker load` |
 
 ---
 
-## Autores
+## Autor
 
 Sebastián Navarrete — sebastian.navarrete@biomedica.udec.cl
