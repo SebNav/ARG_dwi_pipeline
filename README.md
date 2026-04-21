@@ -13,24 +13,17 @@ Todo el software necesario (FSL, MRtrix3, DSI Studio, Python) está incluido en 
 - [Docker](https://docs.docker.com/get-docker/) instalado
 - (Opcional) GPU NVIDIA con [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) para acelerar la corrección de Eddy
 
-### Agregar tu usuario al grupo Docker (evita usar `sudo`)
+
+
+## Carga de la Imagen
+
+Descarga la imagen docker presente en el siguiente drive. Desde el directorio donde se encuentra la imagen descargada `dwi_pipeline.tar.gz`:
 
 ```bash
-sudo usermod -aG docker $USER
-newgrp docker
+docker load -i dwi_pipeline.tar.gz
 ```
 
----
-
-## Construcción de la Imagen
-
-Desde el directorio que contiene el `Dockerfile`:
-
-```bash
-docker build -t dwi_pipeline .
-```
-
-> La imagen incluye FSL (~5 GB), MRtrix3 y DSI Studio. La construcción puede tardar 20–40 minutos dependiendo de la conexión.
+> La imagen incluye FSL (~5 GB), MRtrix3 y DSI Studio. La lectura puede tardar unos minutos.
 
 ---
 
@@ -53,7 +46,7 @@ El pipeline espera que los datos estén organizados en formato BIDS. La imagen T
             └── <nombre_AP>.json
 ```
 
-> La imagen T1w debe tener el cráneo extraído. Puede provenir de cualquier fuente: carpeta `anat/`, FreeSurfer, etc.
+> La imagen T1w que se proporcionada deber ser la imagen preprocesada con el craneo removido para un registor entre imagenes. Puede provenir de cualquier fuente: carpeta `anat/`, FreeSurfer, etc.
 
 ---
 
@@ -63,6 +56,7 @@ El pipeline espera que los datos estén organizados en formato BIDS. La imagen T
 
 ```bash
 docker run --rm \
+    -e OMP_NUM_THREADS=$(nproc) \
     -u $(id -u):$(id -g) \
     -w /tmp \
     -v /ruta/a/mis/datos:/data \
@@ -172,7 +166,7 @@ Tractography/
 | Columna | Descripción |
 |---|---|
 | `bundle` | Nombre del fascículo |
-| `metrics` | Métrica (FA, QA, AD, RD, MD, etc.) |
+| `metrics` | Métrica (AD, FA, ISO, MD, QA, QIR, RD, RDI) |
 | `n_streamlines` | Número de streamlines del fascículo |
 | `vol_mm3` | Volumen en mm³ (vóxeles únicos × volumen de vóxel) |
 | `mean` | Media de las medias por streamline |
@@ -207,7 +201,6 @@ docker run --rm --gpus all \
 | Problema | Causa | Solución |
 |---|---|---|
 | Archivos con ícono de candado | Container ejecutado como root | Usar `-u $(id -u):$(id -g)` y sin `sudo` |
-| `Permission denied` en `/opt/pipeline` | MRtrix3 escribe temporales en el WORKDIR | Agregar `-w /tmp` |
 | `eddy_cuda` falla → usa CPU | Sin GPU o sin `--gpus all` | Agregar `--gpus all` si hay GPU NVIDIA |
 | `dsi_studio: command not found` | PATH incorrecto en la imagen | Reconstruir la imagen con `docker build` |
 
