@@ -50,6 +50,39 @@ El pipeline espera que los datos DWI estén organizados en formato BIDS. La imag
 
 ---
 
+## Sobre los volúmenes de Docker (`-v`)
+
+Docker es un contenedor aislado: por defecto no puede ver los archivos de tu computador. La opción `-v` conecta una carpeta de tu sistema con una carpeta dentro del contenedor:
+
+```
+-v /ruta/en/tu/computador:/ruta/dentro/del/contenedor
+```
+
+Por ejemplo:
+
+```
+-v /media/data/Subjects:/data
+```
+
+Hace que tu carpeta `/media/data/Subjects` sea accesible dentro del contenedor como `/data`. Cualquier archivo que el pipeline guarde en `/data` aparecerá directamente en `/media/data/Subjects` en tu computador.
+
+Cuando uses el pipeline, reemplaza `/ruta/a/mi/carpeta/de/sujetos` con la ruta real en tu sistema. Por ejemplo, si tus sujetos están en `/home/usuario/MRI/Subjects`, el comando sería:
+
+```bash
+-v /home/usuario/MRI/Subjects:/data
+```
+
+Si además necesitas montar la carpeta de FreeSurfer, agrega un segundo `-v`:
+
+```bash
+-v /home/usuario/MRI/Subjects:/data \
+-v /home/usuario/freesurfer:/freesurfer
+```
+
+Dentro del contenedor, la T1w de FreeSurfer estaría accesible como `/freesurfer/sub-XX/mri/T1w_brain.nii.gz`.
+
+---
+
 ## Uso
 
 ### Ejecución básica
