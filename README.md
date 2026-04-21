@@ -14,18 +14,7 @@ Todo el software necesario (FSL, MRtrix3, DSI Studio, Python) está incluido en 
 - (Opcional, pero **muy recomendado**) GPU NVIDIA con [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
 
 > **¿Por qué GPU?** El paso de corrección de distorsiones y movimiento (`eddy`) es el más lento del pipeline. Con GPU (`eddy_cuda`) este paso puede completarse en **5–10 minutos**; sin GPU (`eddy_cpu`) puede tomar entre **30 y 90 minutos** por sujeto. Si tu equipo tiene una tarjeta NVIDIA, se recomienda instalar CUDA y el nvidia-container-toolkit antes de usar el pipeline.
->
-> Instalación rápida del nvidia-container-toolkit en Ubuntu:
-> ```bash
-> curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
-> curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
->     sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
->     sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-> sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
-> sudo systemctl restart docker
-> ```
 
----
 
 ## Carga de la Imagen
 
