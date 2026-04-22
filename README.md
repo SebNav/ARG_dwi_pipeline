@@ -18,7 +18,11 @@ Todo el software necesario (FSL, MRtrix3, DSI Studio, Python) está incluido en 
 
 ## Carga de la Imagen
 
-Descarga la imagen Docker desde el drive compartido. Desde el directorio donde se encuentra el archivo descargado `dwi_pipeline.tar.gz`:
+Descarga la imagen Docker desde el siguiente enlace:
+
+**[Descargar dwi_pipeline.tar.gz (Google Drive)](https://drive.google.com/file/d/1GFqDUmtoqm-eoCy_foNhIZOI3bqsaVHM/view?usp=sharing)**
+
+Una vez descargada, carga la imagen desde el directorio donde se encuentra el archivo:
 
 ```bash
 docker load -i dwi_pipeline.tar.gz
@@ -88,8 +92,11 @@ Dentro del contenedor, la T1w de FreeSurfer estaría accesible como `/freesurfer
 
 ### Ejecución básica
 
+Las opciones `-u $(id -u):$(id -g) -w /tmp` hacen que Docker cree los archivos de salida con tu usuario como propietario en lugar de `root`. Sin ellas, las carpetas y archivos generados aparecerán con un ícono de candado y requerirán `sudo` para acceder a ellos.
+
 ```bash
 docker run --rm \
+    -u $(id -u):$(id -g) -w /tmp \
     -v /ruta/a/mi/carpeta/de/sujetos:/data \
     dwi_pipeline \
     -s sub-13/ses-1 \
@@ -216,6 +223,7 @@ Tractography/
 
 ```bash
 docker run --rm --gpus all \
+    -u $(id -u):$(id -g) -w /tmp \
     -v /media/data/Subjects:/data \
     -v /media/data/freesurfer:/freesurfer \
     dwi_pipeline \
@@ -250,6 +258,7 @@ for sub_dir in "${SUBJECTS_DIR}"/sub-*/ses-*/; do
     echo "=============================="
 
     docker run --rm --gpus all \
+        -u $(id -u):$(id -g) -w /tmp \
         -v "${SUBJECTS_DIR}:/data" \
         -v "${FREESURFER_DIR}:/freesurfer" \
         dwi_pipeline \
