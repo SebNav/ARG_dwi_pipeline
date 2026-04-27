@@ -227,7 +227,7 @@ docker run --rm --gpus all \
     -s sub-13/ses-1 \
     --dwi_pa sub-13_ses-1_dir-PA_dwi \
     --dwi_ap sub-13_ses-1_dir-AP_dwi \
-    --t1w /freesurfer/sub-13/mri/T1w_brain.nii.gz \
+    --t1w /freesurfer/sub-13/mri/brain.mgz \
     --tract_count 5000000 \
     --cleanup
 ```
@@ -240,8 +240,8 @@ El siguiente script itera sobre todos los sujetos y sesiones encontrados en la c
 #!/bin/bash
 SUBJECTS_DIR=/ruta/a/mi/carpeta/de/sujetos
 FREESURFER_DIR=/ruta/a/freesurfer   # opcional, ajustar según corresponda
-DWI_PA_SUFFIX=dir-PA_dwi            # sufijo del archivo PA (sin sub-XX_ses-Y_)
-DWI_AP_SUFFIX=dir-AP_dwi            # sufijo del archivo AP (sin sub-XX_ses-Y_)
+DWI_PA_SUFFIX=dwi-1            # sufijo del archivo PA (sin sub-XX_ses-Y_)
+DWI_AP_SUFFIX=dwi-2          # sufijo del archivo AP (sin sub-XX_ses-Y_)
 
 for sub_dir in "${SUBJECTS_DIR}"/sub-*/ses-*/; do
     # Extraer sub-XX/ses-Y desde la ruta completa
@@ -263,7 +263,7 @@ for sub_dir in "${SUBJECTS_DIR}"/sub-*/ses-*/; do
         -s "${SUBJECT}" \
         --dwi_pa "${PREFIX}_${DWI_PA_SUFFIX}" \
         --dwi_ap "${PREFIX}_${DWI_AP_SUFFIX}" \
-        --t1w "/freesurfer/${SUB}/mri/T1w_brain.nii.gz" \
+        --t1w "/freesurfer/${SUB}/mri/brain.mgz" \
         --cleanup
 done
 ```
@@ -298,7 +298,7 @@ docker run --rm --gpus all \
     -s sub-13/ses-1 \
     --dwi_pa sub-13_ses-1_dir-PA_dwi \
     --dwi_ap sub-13_ses-1_dir-AP_dwi \
-    --t1w /freesurfer/sub-13/mri/T1w_brain.nii.gz \
+    --t1w /freesurfer/sub-13/mri/brain.mgz \
     --cleanup
 ```
 
