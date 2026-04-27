@@ -92,13 +92,11 @@ Dentro del contenedor, la T1w de FreeSurfer estaría accesible como `/freesurfer
 
 ### Ejecución básica
 
-Las opciones `-u $(id -u):$(id -g) -w /tmp` hacen que Docker cree los archivos de salida con tu usuario como propietario en lugar de `root`. Sin ellas, las carpetas y archivos generados aparecerán con un ícono de candado y requerirán `sudo` para acceder a ellos.
 
 ```bash
 docker run --rm \
-    -u $(id -u):$(id -g) -w /tmp \
     -v /ruta/a/mi/carpeta/de/sujetos:/data \
-    dwi_pipeline \
+    dwi_pipeline:latest \
     -s sub-13/ses-1 \
     --dwi_pa sub-13_ses-1_dir-PA_dwi \
     --dwi_ap sub-13_ses-1_dir-AP_dwi \
@@ -110,7 +108,7 @@ docker run --rm \
 ```bash
 docker run --rm --gpus all \
     -v /ruta/a/mi/carpeta/de/sujetos:/data \
-    dwi_pipeline \
+    dwi_pipeline:latest \
     -s sub-13/ses-1 \
     --dwi_pa sub-13_ses-1_dir-PA_dwi \
     --dwi_ap sub-13_ses-1_dir-AP_dwi \
@@ -123,7 +121,7 @@ docker run --rm --gpus all \
 docker run --rm --gpus all \
     -v /ruta/a/mi/carpeta/de/sujetos:/data \
     -v /ruta/a/freesurfer:/freesurfer \
-    dwi_pipeline \
+    dwi_pipeline:latest \
     -s sub-13/ses-1 \
     --dwi_pa sub-13_ses-1_dir-PA_dwi \
     --dwi_ap sub-13_ses-1_dir-AP_dwi \
@@ -223,7 +221,6 @@ Tractography/
 
 ```bash
 docker run --rm --gpus all \
-    -u $(id -u):$(id -g) -w /tmp \
     -v /media/data/Subjects:/data \
     -v /media/data/freesurfer:/freesurfer \
     dwi_pipeline \
