@@ -20,7 +20,7 @@ Todo el software necesario (FSL, MRtrix3, DSI Studio, Python) está incluido en 
 
 Descarga la imagen Docker desde el siguiente enlace:
 
-**[Descargar dwi_pipeline.tar.gz (Google Drive)](https://drive.google.com/file/d/1GFqDUmtoqm-eoCy_foNhIZOI3bqsaVHM/view?usp=sharing)**
+**[Descargar dwi_pipeline.tar.gz (Google Drive)](https://drive.google.com/file/d/1Xoa8P8rzQEBytjkbcrxgjEYtoPVLlvMv/view?usp=sharing)**
 
 Una vez descargada, carga la imagen desde el directorio donde se encuentra el archivo:
 
