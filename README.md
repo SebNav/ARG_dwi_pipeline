@@ -255,7 +255,8 @@ for sub_dir in "${SUBJECTS_DIR}"/sub-*/ses-*/; do
     echo "=============================="
 
     docker run --rm --gpus all \
-        -u $(id -u):$(id -g) -w /tmp \
+	  -e HOST_UID=$(id -u) \
+	  -e HOST_GID=$(id -g) \
         -v "${SUBJECTS_DIR}:/data" \
         -v "${FREESURFER_DIR}:/freesurfer" \
         dwi_pipeline \
@@ -271,11 +272,51 @@ done
 
 ---
 
+## Propietario de archivos generados (ícono de candado)
+
+Por defecto, Docker ejecuta los procesos internos como **root** (el administrador del sistema). Cuando el pipeline escribe archivos en tu carpeta montada con `-v`, esos archivos quedan con dueño `root` en tu computador — lo que aparece como un **ícono de candado** en el explorador de archivos y te impide moverlos, editarlos o eliminarlos sin permisos de administrador.
+
+Para evitar esto, el pipeline acepta dos variables de entorno opcionales:
+
+```
+-e HOST_UID=$(id -u)
+-e HOST_GID=$(id -g)
+```
+
+`$(id -u)` y `$(id -g)` son comandos que se ejecutan **en tu computador** antes de iniciar Docker y devuelven tu número de usuario y grupo en ese sistema. Al pasarlos al contenedor, el pipeline los usa al final de su ejecución para cambiar el dueño de todos los archivos generados a tu usuario, dejándolos accesibles sin necesidad de permisos especiales.
+
+**¿Por qué esto funciona en cualquier PC?**
+
+El número de usuario (`UID`) puede ser diferente en cada computador. En un equipo tu usuario puede ser `1000`, en otro puede ser `1001`. Como el valor se obtiene dinámicamente con `$(id -u)` en el momento de ejecutar el comando — y no está escrito de forma fija en ningún lado — el pipeline siempre usará el UID correcto para la máquina en la que estás trabajando, sin necesidad de modificar nada.
+
+### Ejemplo con corrección de propietario
+
+```bash
+docker run --rm --gpus all \
+    -e HOST_UID=$(id -u) \
+    -e HOST_GID=$(id -g) \
+    -v /ruta/a/mi/carpeta/de/sujetos:/data \
+    -v /ruta/a/freesurfer:/freesurfer \
+    dwi_pipeline:latest \
+    -s sub-13/ses-1 \
+    --dwi_pa sub-13_ses-1_dir-PA_dwi \
+    --dwi_ap sub-13_ses-1_dir-AP_dwi \
+    --t1w /freesurfer/sub-13/mri/T1w_brain.nii.gz \
+    --cleanup
+```
+
+> Si no se pasan estas variables, el pipeline igual funcionará correctamente — simplemente los archivos de salida quedarán con dueño `root`. Puedes corregirlo manualmente después con:
+> ```bash
+> sudo chown -R $(id -u):$(id -g) /ruta/a/mi/carpeta/de/sujetos/sub-13/
+> ```
+
+---
+
 ## Solución de Problemas
 
 | Problema | Causa | Solución |
 |---|---|---|
-| Archivos con ícono de candado | Docker configurado para correr como root en ese sistema | Agregar `-u $(id -u):$(id -g) -w /tmp` al comando |
+| Archivos con ícono de candado | Docker corre como root, archivos quedan con dueño `root` | Agregar `-e HOST_UID=$(id -u) -e HOST_GID=$(id -g)` al comando (ver sección anterior) |
 | `eddy_cuda` falla → usa CPU | Sin GPU o sin `--gpus all` | Agregar `--gpus all` si hay GPU NVIDIA disponible |
 | `dsi_studio: command not found` | PATH incorrecto en la imagen | Recargar la imagen con `docker load` |
 
