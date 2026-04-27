@@ -232,7 +232,7 @@ docker run --rm --gpus all \
     --cleanup
 ```
 
-### Procesamiento de todos los sujetos en lote
+### Procesamiento de todos los sujetos en loop
 
 El siguiente script itera sobre todos los sujetos y sesiones encontrados en la carpeta de sujetos y lanza el pipeline para cada uno:
 
