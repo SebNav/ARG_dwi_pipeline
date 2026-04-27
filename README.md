@@ -285,9 +285,6 @@ Para evitar esto, el pipeline acepta dos variables de entorno opcionales:
 
 `$(id -u)` y `$(id -g)` son comandos que se ejecutan **en tu computador** antes de iniciar Docker y devuelven tu número de usuario y grupo en ese sistema. Al pasarlos al contenedor, el pipeline los usa al final de su ejecución para cambiar el dueño de todos los archivos generados a tu usuario, dejándolos accesibles sin necesidad de permisos especiales.
 
-**¿Por qué esto funciona en cualquier PC?**
-
-El número de usuario (`UID`) puede ser diferente en cada computador. En un equipo tu usuario puede ser `1000`, en otro puede ser `1001`. Como el valor se obtiene dinámicamente con `$(id -u)` en el momento de ejecutar el comando — y no está escrito de forma fija en ningún lado — el pipeline siempre usará el UID correcto para la máquina en la que estás trabajando, sin necesidad de modificar nada.
 
 ### Ejemplo con corrección de propietario
 
